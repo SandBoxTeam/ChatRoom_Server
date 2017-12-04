@@ -22,7 +22,6 @@ namespace ChatRoom_Server
         /// <summary>
         /// 发送消息
         /// </summary>
-        /// <param name="headInfo">头部信息</param>
         /// <param name="data">消息</param>
         /// <returns>已发送Data字节</returns>
         public int Send(Data data)

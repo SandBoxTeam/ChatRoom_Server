@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net.Sockets;
 using System.Net;
+using System.Threading;
 
 namespace ChatRoom_Server
 {
@@ -40,7 +41,10 @@ namespace ChatRoom_Server
         /// </summary>
         public Socket _Server;
 
-        int ClientIdBase;
+        /// <summary>
+        /// 客户端ID基数
+        /// </summary>
+        int ClientIDBase;
 
         /// <summary>
         /// Server 构造方法
@@ -49,9 +53,14 @@ namespace ChatRoom_Server
         /// <param name="maxConnectionNum">最大连接数</param>
         public Server(int port, int maxConnectionNum)
         {
+            // 获取IP
             AddressIP = GetAddressIP();
+            // 获取端口
             ServerPort = port;
+
+            // 初始化属性
             MaxConnectionNum = maxConnectionNum;
+            ClientIDBase = 0;
         }
 
         /// <summary>
@@ -71,6 +80,9 @@ namespace ChatRoom_Server
                 // 指定连接队列数
                 _Server.Listen(MaxConnectionNum);
 
+                // 开辟线程启动连接侦听
+                new Thread(ListenConnect).Start();
+
                 return true;
             }
             catch (Exception e)
@@ -80,16 +92,19 @@ namespace ChatRoom_Server
         }
 
         /// <summary>
-        /// 启动连接侦听
+        /// 启动连接侦听 - 异步方法
         /// </summary>
         void ListenConnect()
         {
             try
             {
+                // 循环侦听连接
                 while (true)
                 {
+                    // 创建连接对象 - 阻塞
                     Client client = (Client)_Server.Accept();
 
+                    // 将客户端对象添加到容器
                     AddClienToClientList(client);
                 }
             }
@@ -99,6 +114,10 @@ namespace ChatRoom_Server
             }
         }
 
+        /// <summary>
+        /// 添加客户端对象至客户端容器
+        /// </summary>
+        /// <param name="client">客户端实例对象</param>
         void AddClienToClientList(Client client)
         {
 
