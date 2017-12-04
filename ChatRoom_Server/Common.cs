@@ -17,6 +17,6 @@ namespace ChatRoom_Server
         ServerOffline        = 201, // 服务器离线
         ClientOnline         = 202, // 客户端上线
         ClientOffline        = 203, // 客户端离线
-        Msg                  = 301  // 消息
+        Message              = 301  // 消息
     }
 }
