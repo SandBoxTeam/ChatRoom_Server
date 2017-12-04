@@ -120,11 +120,21 @@ namespace ChatRoom_Server
         /// <param name="client">客户端实例对象</param>
         void AddClienToClientList(Client client)
         {
+            // 设置客户端ID及获取客户端名称
+            client.ClientID = ClientIDBase + 1;
+            client.ClientName = GetClientName();
 
+            // 将客户端实例对象添加到客户端容器
+            ClientList.Add(client);
 
+            /// 获取客户端名称
             string GetClientName()
             {
+                client.Send(new Data(HeadInformation.GetClientName));
 
+                Data data = client.Receive();
+
+                return data.Data_Message;
             }
         }
 

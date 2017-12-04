@@ -39,7 +39,7 @@ namespace ChatRoom_Server
             DataSize = 0;
 
             Data_Str = ((int)headInfo).ToString() + DataSize.ToString();
-            Data_Byte = GetBytes(Data_Str);
+            Data_Byte = GetBytes(Data_Str).Length == 1024 ? GetBytes(Data_Str + " ") : GetBytes(Data_Str);
             Data_Message = null;
         }
 
@@ -49,7 +49,7 @@ namespace ChatRoom_Server
             DataSize = GetBytes(data).Length;
 
             Data_Str = ((int)headInfo).ToString() + DataSize.ToString() + data;
-            Data_Byte = GetBytes(Data_Str);
+            Data_Byte = GetBytes(Data_Str).Length == 1024 ? GetBytes(Data_Str + " ") : GetBytes(Data_Str);
             Data_Message = data;
         }
 
