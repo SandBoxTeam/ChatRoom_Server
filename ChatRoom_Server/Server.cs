@@ -42,6 +42,11 @@ namespace ChatRoom_Server
         public Socket _Server;
 
         /// <summary>
+        /// 当前连接的客户端实例对象
+        /// </summary>
+        Client CurrentConnectionClient;
+
+        /// <summary>
         /// 客户端ID基数
         /// </summary>
         int ClientIDBase;
@@ -106,6 +111,10 @@ namespace ChatRoom_Server
 
                     // 将客户端对象添加到容器
                     AddClienToClientList(client);
+
+                    CurrentConnectionClient = client;
+
+                    new Thread(ReceiveMessages).Start();
                 }
             }
             catch (Exception e)
@@ -135,6 +144,40 @@ namespace ChatRoom_Server
                 Data data = client.Receive();
 
                 return data.Data_Message;
+            }
+        }
+
+        void ReceiveMessages()
+        {
+            try
+            {
+                Client client = CurrentConnectionClient;
+
+                while (true)
+                {
+                    Data data = client.Receive();
+                }
+            }
+            catch (Exception ex)
+            {
+                Thread.CurrentThread.Abort();
+            }
+        }
+
+        public void SendMessageToClientByID(int clientID, Data data)
+        {
+
+        }
+
+        /// <summary>
+        /// 向所有在线客户端广播消息
+        /// </summary>
+        /// <param name="data"></param>
+        public void BroadcastMessage(Data data)
+        {
+            foreach (var item in ClientList)
+            {
+                item.Send(data);
             }
         }
 
