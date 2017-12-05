@@ -62,13 +62,13 @@ namespace ChatRoom_Server
             {
                 string input;
 
-                OutputMessage($"ServerPort({_serverPort}):");
+                OutputMessage($"ServerPort ({_serverPort}):");
 
                 input = GetInput();
 
                 _serverPort = input.Trim() != "" ? int.Parse(input.Trim()) : _serverPort;
 
-                OutputMessage($"MaxConnectionNum({_maxConnectionNum}):");
+                OutputMessage($"MaxConnectionNum ({_maxConnectionNum}):");
 
                 input = GetInput();
 
