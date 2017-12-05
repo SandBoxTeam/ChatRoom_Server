@@ -30,7 +30,7 @@ namespace ChatRoom_Server
 
         static void Main(string[] args)
         {
-
+            ServerInit();
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace ChatRoom_Server
 
                 _maxConnectionNum = input.Trim() != "" ? int.Parse(input.Trim()) : _maxConnectionNum;
 
-                OutputMessage("Confirm Setting? :");
+                OutputMessage("Confirm Setting? (y/n):");
 
                 input = GetInput();
 
