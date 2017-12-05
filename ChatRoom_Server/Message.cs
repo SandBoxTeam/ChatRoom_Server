@@ -18,6 +18,8 @@ namespace ChatRoom_Server
 
         public List<ClientList> OnlineClientList{ get; set; }
 
+        public DateTime Time { get; set; }
+
         public string Msg { get; set; }
     }
 }
