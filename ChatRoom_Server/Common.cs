@@ -19,6 +19,14 @@ namespace ChatRoom_Server
     }
 
     /// <summary>
+    /// 控制台消息类型
+    /// </summary>
+    public enum ConsoleMessageType
+    {
+        Info, Command, Error, Message
+    }
+
+    /// <summary>
     /// 添加客户端对象至客户端容器 委托
     /// </summary>
     /// <param name="client"></param>

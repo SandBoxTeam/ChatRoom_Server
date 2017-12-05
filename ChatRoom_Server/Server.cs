@@ -101,6 +101,9 @@ namespace ChatRoom_Server
             }
         }
 
+        /// <summary>
+        /// 关闭服务器
+        /// </summary>
         public void ServerStop()
         {
             try
