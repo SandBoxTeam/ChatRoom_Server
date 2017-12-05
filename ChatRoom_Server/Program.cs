@@ -43,6 +43,8 @@ namespace ChatRoom_Server
 
             SetServer();
 
+            OutputLineMessage(ConsoleMessageType.Info, "ServerInitIng...");
+
             // 实例化服务器对象
             Server = new Server(ServerPort, MaxConnectionNum);
 
