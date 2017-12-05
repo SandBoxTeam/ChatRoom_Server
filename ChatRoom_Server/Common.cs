@@ -23,7 +23,7 @@ namespace ChatRoom_Server
     /// </summary>
     public enum ConsoleMessageType
     {
-        Info, Command, Error, Message
+        Info, Error
     }
 
     /// <summary>

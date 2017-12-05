@@ -206,6 +206,7 @@ namespace ChatRoom_Server
         /// <summary>
         /// 接收客户端消息
         /// </summary>
+        /// <param name="client">客户端实例</param>
         void ReceiveMessages(object client)
         {
             try
@@ -214,29 +215,37 @@ namespace ChatRoom_Server
 
                 while (true)
                 {
+                    // 接收客户端消息
                     Data data = _client.Receive();
 
+                    // 触发事件
                     ReceiveMessages_Event?.Invoke(data);
 
-                    if (data.HeadInfo == HeadInformation.Message)
+                    // 判断头部信息类型
+                    if (data.HeadInfo == HeadInformation.Message) // 消息
                     {
-                        if (data.Data_Message.ToClientID != 0)
+                        // 判断是否为私聊消息
+                        if (data.Data_Message.ToClientID != 0) // 私聊
                         {
+                            // 发送私聊消息
                             SendMessageToClientByID(data.Data_Message.ToClientID, data);
                         }
-                        else
+                        else // 群聊
                         {
+                            // 广播群聊消息
                             BroadcastMessage(data);
                         }
                     }
-                    else if (data.HeadInfo == HeadInformation.ClientOffline)
+                    else if (data.HeadInfo == HeadInformation.ClientOffline) // 客户端离线
                     {
+                        // 广播客户端离线消息
                         BroadcastMessage(new Data(HeadInformation.ClientOffline, new Message() { ClientID = data.Data_Message.ClientID, ClientName = data.Data_Message.ClientName }));
                     }
                 }
             }
             catch (Exception ex)
             {
+                // 终止当前线程
                 Thread.CurrentThread.Abort();
             }
         }
