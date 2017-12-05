@@ -12,8 +12,6 @@ namespace ChatRoom_Server
     public enum HeadInformation
     {
         CheckConnectState    = 101, // 检查连接状态
-        GetOnlineClient      = 102, // 获取在线客户端数
-        GetClientName        = 103, // 获取客户端名称
         ServerOffline        = 201, // 服务器离线
         ClientOnline         = 202, // 客户端上线
         ClientOffline        = 203, // 客户端离线

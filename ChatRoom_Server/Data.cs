@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace ChatRoom_Server
 {
@@ -31,7 +32,7 @@ namespace ChatRoom_Server
         /// <summary>
         /// 消息
         /// </summary>
-        public string Data_Message { get; }
+        public Message Data_Message { get; }
 
         public Data(HeadInformation headInfo)
         {
@@ -43,24 +44,14 @@ namespace ChatRoom_Server
             Data_Message = null;
         }
 
-        public Data(HeadInformation headInfo, string data)
+        public Data(HeadInformation headInfo, Message msg)
         {
             HeadInfo = headInfo;
-            DataSize = GetBytes(data).Length;
+            DataSize = GetBytes(JsonConvert.SerializeObject(msg)).Length;
 
-            Data_Str = ((int)headInfo).ToString() + DataSize.ToString() + data;
+            Data_Str = ((int)headInfo).ToString() + DataSize.ToString() + JsonConvert.SerializeObject(msg);
             Data_Byte = GetBytes(Data_Str).Length == 1024 ? GetBytes(Data_Str + " ") : GetBytes(Data_Str);
-            Data_Message = data;
-        }
-
-        public Data(HeadInformation headInfo, byte[] data)
-        {
-            HeadInfo = headInfo;
-            DataSize = data.Length;
-
-            Data_Str = ((int)headInfo).ToString() + DataSize.ToString() + GetString(data);
-            Data_Byte = GetBytes(Data_Str);
-            Data_Message = GetString(data);
+            Data_Message = msg;
         }
 
         public Data(string data)
@@ -71,7 +62,7 @@ namespace ChatRoom_Server
             HeadInfo = (HeadInformation)int.Parse(GetString(Data_Byte, 0, 4));
             DataSize = int.Parse(GetString(Data_Byte, 4, 8));
 
-            Data_Message = GetString(Data_Byte, 8, DataSize);
+            Data_Message = JsonConvert.DeserializeObject<Message>(GetString(Data_Byte, 8, DataSize));
         }
 
         public Data(byte[] data)
@@ -82,7 +73,7 @@ namespace ChatRoom_Server
             HeadInfo = (HeadInformation)int.Parse(GetString(Data_Byte, 0, 4));
             DataSize = int.Parse(GetString(Data_Byte, 4, 8));
 
-            Data_Message = GetString(Data_Byte, 8, DataSize);
+            Data_Message = JsonConvert.DeserializeObject<Message>(GetString(Data_Byte, 8, DataSize));
         }
 
         Byte[] GetBytes(string str)

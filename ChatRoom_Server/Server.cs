@@ -110,11 +110,12 @@ namespace ChatRoom_Server
                     Client client = (Client)_Server.Accept();
 
                     // 将客户端对象添加到容器
-                    AddClienToClientList(client);
+                    if (AddClienToClientList(client)) 
+                    {
+                        CurrentConnectionClient = client;
 
-                    CurrentConnectionClient = client;
-
-                    new Thread(ReceiveMessages).Start();
+                        new Thread(ReceiveMessages).Start();
+                    }
                 }
             }
             catch (Exception e)
@@ -127,24 +128,38 @@ namespace ChatRoom_Server
         /// 添加客户端对象至客户端容器
         /// </summary>
         /// <param name="client">客户端实例对象</param>
-        void AddClienToClientList(Client client)
+        bool AddClienToClientList(Client client)
         {
-            // 设置客户端ID及获取客户端名称
-            client.ClientID = ClientIDBase + 1;
-            client.ClientName = GetClientName();
+            bool sign = true;
 
-            // 将客户端实例对象添加到客户端容器
-            ClientList.Add(client);
+            client.Send(new Data(HeadInformation.CheckConnectState));
 
-            /// 获取客户端名称
-            string GetClientName()
+            Data result = client.Receive();
+
+            if (OnlineClientCount != 0 && ClientList.Exists(i => i.ClientName == result.Data_Message.ClientName))
             {
-                client.Send(new Data(HeadInformation.GetClientName));
+                sign = false;
 
-                Data data = client.Receive();
-
-                return data.Data_Message;
+                client.Send(new Data(HeadInformation.CheckConnectState, new Message() { Sign = sign }));
             }
+            else
+            {
+                int ClientID = ++ClientIDBase;
+                string ClientName = result.Data_Message.ClientName;
+
+                List<ClientList> onlineClientList = new List<ClientList>();
+
+                foreach (var item in ClientList)
+                {
+                    onlineClientList.Add(new ClientList() { ClientID = item.ClientID, ClientName = item.ClientName });
+                }
+
+                Message msg = new Message() { ClientID = ClientID, ClientName = ClientName, Sign = sign, OnlineClientList = onlineClientList };
+
+                client.Send(new Data(HeadInformation.CheckConnectState, msg));
+            }
+
+            return sign;
         }
 
         void ReceiveMessages()
@@ -164,7 +179,7 @@ namespace ChatRoom_Server
             }
         }
 
-        public void SendMessageToClientByID(int clientID, Data data)
+        public void SendMessageToClientByID(Data data)
         {
 
         }
