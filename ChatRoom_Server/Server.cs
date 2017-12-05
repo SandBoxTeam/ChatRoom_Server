@@ -52,6 +52,16 @@ namespace ChatRoom_Server
         int ClientIDBase;
 
         /// <summary>
+        /// 添加客户端对象至客户端容器 事件
+        /// </summary>
+        public event AddClienToClientList_EventHandler AddClienToClientList_Event;
+
+        /// <summary>
+        /// 接收客户端消息 事件
+        /// </summary>
+        public event ReceiveMessages_EventHandler ReceiveMessages_Event;
+
+        /// <summary>
         /// Server 构造方法
         /// </summary>
         /// <param name="port">服务器端口</param>
@@ -96,6 +106,26 @@ namespace ChatRoom_Server
             }
         }
 
+        public void ServerStop()
+        {
+            try
+            {
+                BroadcastMessage(new Data(HeadInformation.ServerOffline));
+
+                CurrentConnectionClient = null;
+
+                _Server.Close();
+                _Server.Dispose();
+
+                ClientIDBase = 0;
+                ClientList.Clear();
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+
         /// <summary>
         /// 启动连接侦听 - 异步方法
         /// </summary>
@@ -130,38 +160,58 @@ namespace ChatRoom_Server
         /// <param name="client">客户端实例对象</param>
         bool AddClienToClientList(Client client)
         {
-            bool sign = true;
-
-            client.Send(new Data(HeadInformation.CheckConnectState));
-
-            Data result = client.Receive();
-
-            if (OnlineClientCount != 0 && ClientList.Exists(i => i.ClientName == result.Data_Message.ClientName))
+            try
             {
-                sign = false;
+                bool sign = true;
 
-                client.Send(new Data(HeadInformation.CheckConnectState, new Message() { Sign = sign }));
-            }
-            else
-            {
-                int ClientID = ++ClientIDBase;
-                string ClientName = result.Data_Message.ClientName;
+                client.Send(new Data(HeadInformation.CheckConnectState));
 
-                List<ClientList> onlineClientList = new List<ClientList>();
+                Data result = client.Receive();
 
-                foreach (var item in ClientList)
+                if (OnlineClientCount != 0 && ClientList.Exists(i => i.ClientName == result.Data_Message.ClientName))
                 {
-                    onlineClientList.Add(new ClientList() { ClientID = item.ClientID, ClientName = item.ClientName });
+                    sign = false;
+
+                    client.Send(new Data(HeadInformation.CheckConnectState, new Message() { Sign = sign }));
+                }
+                else
+                {
+                    int ClientID = ++ClientIDBase;
+
+                    string ClientName = result.Data_Message.ClientName;
+
+                    List<ClientList> onlineClientList = new List<ClientList>();
+
+                    foreach (var item in ClientList)
+                    {
+                        onlineClientList.Add(new ClientList() { ClientID = item.ClientID, ClientName = item.ClientName });
+                    }
+
+                    Message msg = new Message() { ClientID = ClientID, ClientName = ClientName, Sign = sign, OnlineClientList = onlineClientList };
+
+                    client.Send(new Data(HeadInformation.CheckConnectState, msg));
+
+                    client.ClientID = ClientID;
+                    client.ClientName = ClientName;
+
+                    ClientList.Add(client);
+
+                    AddClienToClientList_Event?.Invoke(client);
+
+                    BroadcastMessage(new Data(HeadInformation.ClientOnline, new Message() { ClientID = ClientID, ClientName = ClientName }));
                 }
 
-                Message msg = new Message() { ClientID = ClientID, ClientName = ClientName, Sign = sign, OnlineClientList = onlineClientList };
-
-                client.Send(new Data(HeadInformation.CheckConnectState, msg));
+                return sign;
             }
-
-            return sign;
+            catch (Exception ex)
+            {
+                return false;
+            }
         }
 
+        /// <summary>
+        /// 接收客户端消息
+        /// </summary>
         void ReceiveMessages()
         {
             try
@@ -171,6 +221,24 @@ namespace ChatRoom_Server
                 while (true)
                 {
                     Data data = client.Receive();
+
+                    ReceiveMessages_Event?.Invoke(data);
+
+                    if (data.HeadInfo == HeadInformation.Message)
+                    {
+                        if (data.Data_Message.ToClientID != 0)
+                        {
+                            SendMessageToClientByID(data.Data_Message.ToClientID, data);
+                        }
+                        else
+                        {
+                            BroadcastMessage(data);
+                        }
+                    }
+                    else if (data.HeadInfo == HeadInformation.ClientOffline)
+                    {
+                        BroadcastMessage(new Data(HeadInformation.ClientOffline, new Message() { ClientID = data.Data_Message.ClientID, ClientName = data.Data_Message.ClientName }));
+                    }
                 }
             }
             catch (Exception ex)
@@ -179,21 +247,69 @@ namespace ChatRoom_Server
             }
         }
 
-        public void SendMessageToClientByID(Data data)
+        /// <summary>
+        /// 向指定客户端发送消息
+        /// </summary>
+        /// <param name="ClientID">客户端ID</param>
+        /// <param name="data">消息data</param>
+        void SendMessageToClientByID(int ClientID, Data data)
         {
+            ClientList.Find(i => i.ClientID == ClientID).Send(data);
+        }
 
+        /// <summary>
+        /// 向指定客户端发送消息
+        /// </summary>
+        /// <param name="ClientID">客户端ID</param>
+        /// <param name="msg">消息字符串</param>
+        public void SendMessageToClientByID(int ClientID, string msg)
+        {
+            ClientList.Find(i => i.ClientID == ClientID).Send(new Data(HeadInformation.Message, new Message() { ClientID = -1, ToClientID = ClientID, Msg = msg }));
         }
 
         /// <summary>
         /// 向所有在线客户端广播消息
         /// </summary>
         /// <param name="data"></param>
-        public void BroadcastMessage(Data data)
+        int BroadcastMessage(Data data)
         {
+            int num = 0;
+
+            if (OnlineClientCount == 0)
+            {
+                return num;
+            }
+
             foreach (var item in ClientList)
             {
                 item.Send(data);
+                num++;
             }
+
+            return num;
+        }
+
+        /// <summary>
+        /// 向所有在线客户端广播消息
+        /// </summary>
+        /// <param name="msg">消息字符串</param>
+        /// <returns></returns>
+        public int BroadcastMessage(string msg)
+        {
+            int num = 0;
+
+            if (OnlineClientCount == 0)
+            {
+                return num;
+            }
+
+            foreach (var item in ClientList)
+            {
+                item.Send(new Data(HeadInformation.Message, new Message() { ClientID = -1, Msg = msg }));
+                num++;
+            }
+
+            return num;
         }
 
         /// <summary>

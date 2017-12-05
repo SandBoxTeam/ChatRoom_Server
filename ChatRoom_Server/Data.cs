@@ -62,7 +62,14 @@ namespace ChatRoom_Server
             HeadInfo = (HeadInformation)int.Parse(GetString(Data_Byte, 0, 4));
             DataSize = int.Parse(GetString(Data_Byte, 4, 8));
 
-            Data_Message = JsonConvert.DeserializeObject<Message>(GetString(Data_Byte, 8, DataSize));
+            if (DataSize != 0)
+            {
+                Data_Message = JsonConvert.DeserializeObject<Message>(GetString(Data_Byte, 8, DataSize));
+            }
+            else
+            {
+                Data_Message = null;
+            }
         }
 
         public Data(byte[] data)
@@ -73,7 +80,14 @@ namespace ChatRoom_Server
             HeadInfo = (HeadInformation)int.Parse(GetString(Data_Byte, 0, 4));
             DataSize = int.Parse(GetString(Data_Byte, 4, 8));
 
-            Data_Message = JsonConvert.DeserializeObject<Message>(GetString(Data_Byte, 8, DataSize));
+            if (DataSize != 0)
+            {
+                Data_Message = JsonConvert.DeserializeObject<Message>(GetString(Data_Byte, 8, DataSize));
+            }
+            else
+            {
+                Data_Message = null;
+            }
         }
 
         Byte[] GetBytes(string str)
