@@ -31,6 +31,12 @@ namespace ChatRoom_Server
         static void Main(string[] args)
         {
             ServerInit();
+            StartServer();
+
+            while (true)
+            {
+                GetInput();
+            }
         }
 
         /// <summary>
@@ -51,6 +57,8 @@ namespace ChatRoom_Server
             // 绑定事件
             Server.AddClienToClientList_Event += new AddClienToClientList_EventHandler(AddClienToClientListEvent);
             Server.ReceiveMessages_Event += new ReceiveMessages_EventHandler(ReceiveMessagesEvent);
+
+            OutputLineMessage(ConsoleMessageType.Info, "ServerInitIng...OK!");
         }
 
         static void SetServer()
@@ -103,7 +111,22 @@ namespace ChatRoom_Server
         /// <returns></returns>
         static bool StartServer()
         {
-            return true;
+            OutputLineMessage(ConsoleMessageType.Info, "ServerStartIng...");
+
+            bool result = Server.ServerInit();
+
+            if (result)
+            {
+                Console.Title += $" [{Server.AddressIP}:{Server.ServerPort}]";
+
+                OutputLineMessage(ConsoleMessageType.Info, "ServerStartIng...OK!");
+            }
+            else
+            {
+                OutputLineMessage(ConsoleMessageType.Error, "ServerStartIng...Fail!");
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -111,15 +134,24 @@ namespace ChatRoom_Server
         /// </summary>
         static void AddClienToClientListEvent(Client client)
         {
-
+            OutputLineMessage(ConsoleMessageType.Info, $"[{client.ClientID}][{client.ClientName}] [{client.RemoteEndPoint.ToString()}] Online");
         }
 
         /// <summary>
         /// 接收客户端消息 事件
         /// </summary>
-        static void ReceiveMessagesEvent(Data data)
+        static void ReceiveMessagesEvent(Data data, Client client)
         {
-            
+            switch (data.HeadInfo)
+            {
+                case HeadInformation.ClientOffline:
+                    OutputLineMessage(ConsoleMessageType.Info, $"[{client.ClientID}][{client.ClientName}] [{client.RemoteEndPoint.ToString()}] Offline");
+                    break;
+
+                case HeadInformation.Message:
+                    OutputLineMessage(data);
+                    break;
+            }
         }
 
         static string GetInput()

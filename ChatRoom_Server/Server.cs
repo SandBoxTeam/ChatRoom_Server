@@ -174,6 +174,11 @@ namespace ChatRoom_Server
 
                     string ClientName = result.Data_Message.ClientName;
 
+                    client.ClientID = ClientID;
+                    client.ClientName = ClientName;
+
+                    ClientList.Add(client);
+
                     List<ClientList> onlineClientList = new List<ClientList>();
 
                     foreach (var item in ClientList)
@@ -184,11 +189,6 @@ namespace ChatRoom_Server
                     Message msg = new Message() { ClientID = ClientID, ClientName = ClientName, Sign = sign, OnlineClientList = onlineClientList };
 
                     client.Send(new Data(HeadInformation.CheckConnectState, msg));
-
-                    client.ClientID = ClientID;
-                    client.ClientName = ClientName;
-
-                    ClientList.Add(client);
 
                     AddClienToClientList_Event?.Invoke(client);
 
@@ -219,7 +219,7 @@ namespace ChatRoom_Server
                     Data data = _client.Receive();
 
                     // 触发事件
-                    ReceiveMessages_Event?.Invoke(data);
+                    ReceiveMessages_Event?.Invoke(data, _client);
 
                     // 判断头部信息类型
                     if (data.HeadInfo == HeadInformation.Message) // 消息
@@ -238,6 +238,8 @@ namespace ChatRoom_Server
                     }
                     else if (data.HeadInfo == HeadInformation.ClientOffline) // 客户端离线
                     {
+                        ClientList.Remove(ClientList.Find(i => i.ClientID == data.Data_Message.ClientID));
+
                         // 广播客户端离线消息
                         BroadcastMessage(new Data(HeadInformation.ClientOffline, new Message() { ClientID = data.Data_Message.ClientID, ClientName = data.Data_Message.ClientName }));
                     }

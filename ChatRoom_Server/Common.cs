@@ -36,5 +36,5 @@ namespace ChatRoom_Server
     /// 接收客户端消息 委托
     /// </summary>
     /// <param name="data"></param>
-    delegate void ReceiveMessages_EventHandler(Data data);
+    delegate void ReceiveMessages_EventHandler(Data data, Client client);
 }
